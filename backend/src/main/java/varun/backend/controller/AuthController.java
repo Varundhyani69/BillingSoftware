@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import varun.backend.io.AuthRequest;
 import varun.backend.io.AuthResponse;
+import varun.backend.service.UserService;
 import varun.backend.service.implementation.AppUserDetailsService;
 import varun.backend.utils.JwtUtil;
 
@@ -26,13 +27,15 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final AppUserDetailsService appUserDetailsService;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest request) throws Exception{
         authenticate(request.getEmail(),request.getPassword());
         final UserDetails userDetails = appUserDetailsService.loadUserByUsername(request.getEmail());
         final String jwtToken = jwtUtil.generateToken(userDetails);
-        return new AuthResponse(request.getEmail(),"USER", jwtToken);
+        String role = userService.getUserRole(request.getEmail());
+        return new AuthResponse(request.getEmail(),jwtToken, role);
     }
 
     private void authenticate(String email, String password) throws Exception {

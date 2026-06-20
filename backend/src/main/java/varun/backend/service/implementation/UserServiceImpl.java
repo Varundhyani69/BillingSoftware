@@ -1,0 +1,75 @@
+package varun.backend.service.implementation;
+
+import lombok.RequiredArgsConstructor;
+import org.apache.catalina.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import varun.backend.entity.UserEntity;
+import varun.backend.io.UserRequest;
+import varun.backend.io.UserResponse;
+import varun.backend.repository.UserRepository;
+import varun.backend.service.UserService;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    @Override
+    public UserResponse createUser(UserRequest request) {
+        UserEntity newUser = convertToEntity(request);
+        newUser = userRepository.save(newUser);
+        return convertToResponse(newUser);
+    }
+
+    private UserResponse convertToResponse(UserEntity newUser) {
+        return UserResponse.builder()
+                .name(newUser.getName())
+                .email(newUser.getEmail())
+                .userId(newUser.getUserId())
+                .createdAt(newUser.getCreated_at())
+                .updatedAt(newUser.getUpdated_at())
+                .role(newUser.getRole())
+                .build();
+    }
+
+    private UserEntity convertToEntity(UserRequest request) {
+        return UserEntity.builder()
+                .userId(UUID.randomUUID().toString())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .role(request.getRole())
+                .name(request.getName())
+                .build();
+    }
+
+    @Override
+    public String getUserRole(String email) {
+        UserEntity existingUser = userRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        return existingUser.getRole();
+    }
+
+    @Override
+    public List<UserResponse> readUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(user -> convertToResponse(user))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteUser(String id) {
+        UserEntity existingUser = userRepository.findByUserId(id)
+                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        userRepository.delete(existingUser);
+    }
+}
