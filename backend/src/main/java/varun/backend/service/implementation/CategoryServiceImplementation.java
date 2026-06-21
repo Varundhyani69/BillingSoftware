@@ -8,6 +8,7 @@ import varun.backend.entity.CategoryEntity;
 import varun.backend.io.CategoryRequest;
 import varun.backend.io.CategoryResponse;
 import varun.backend.repository.CategoryRepository;
+import varun.backend.repository.ItemRepository;
 import varun.backend.service.CategoryService;
 import varun.backend.service.FileUploadService;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImplementation  implements CategoryService {
     private final FileUploadService fileUploadService;
     private final CategoryRepository categoryRepository;
+    private final ItemRepository itemRepository;
     @Override
     public CategoryResponse add (CategoryRequest request, MultipartFile file){
         String imgUrl = fileUploadService.uploadFile(file);
@@ -52,6 +54,7 @@ public class CategoryServiceImplementation  implements CategoryService {
                 .build();
     }
     private CategoryResponse convertToResponse(CategoryEntity newCategory){
+        Integer itemsCount = itemRepository.countByCategoryId(newCategory.getCategoryId());
         return CategoryResponse.builder()
                 .categoryId(newCategory.getCategoryId())
                 .name(newCategory.getName())
@@ -60,6 +63,7 @@ public class CategoryServiceImplementation  implements CategoryService {
                 .imgUrl(newCategory.getImgUrl())
                 .createdAt(newCategory.getCreatedAt())
                 .updatedAt(newCategory.getUpdatedAt())
+                .items(itemsCount)
                 .build();
     }
 
