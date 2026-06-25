@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import varun.backend.entity.OrderEntity;
 import varun.backend.entity.OrderItemEntity;
-import varun.backend.io.OrderRequest;
-import varun.backend.io.OrderResponse;
-import varun.backend.io.PaymentDetails;
-import varun.backend.io.PaymentMethod;
+import varun.backend.io.*;
 import varun.backend.repository.OrderEntityRepository;
 import varun.backend.service.OrderService;
 
@@ -93,5 +90,28 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderResponse verifyPayment(PaymentVerificationRequest request) {
+        OrderEntity existingOrder = orderEntityRepository.findByOrderId(request.getRazorpayOrderId())
+                .orElseThrow(()->new RuntimeException("Order not found"));
+        if(!verifyRazorpaySignatue(request.getRazorpaySignature(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpayOrderId())){
+            throw new RuntimeException("Payment verification failed");
+
+        }
+        PaymentDetails paymentDetails = existingOrder.getPaymentDetails();
+        paymentDetails.setRazorpayPaymentId(request.getRazorpayPaymentId());
+        paymentDetails.setRazorpayOrderId(request.getRazorpayOrderId());
+        paymentDetails.setRazorpaySignature(request.getRazorpaySignature());
+        paymentDetails.setStaus(PaymentDetails.PaymentStatus.COMPLETED);
+        existingOrder = orderEntityRepository.save(existingOrder);
+        return convertToResponse(existingOrder);
+    }
+
+    private boolean verifyRazorpaySignatue(String razorpaySignature, String razorpayPaymentId, String razorpayOrderId) {
+        return true;
     }
 }
