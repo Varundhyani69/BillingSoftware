@@ -1,6 +1,7 @@
 package varun.backend.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import varun.backend.entity.OrderEntity;
 import varun.backend.entity.OrderItemEntity;
@@ -8,6 +9,8 @@ import varun.backend.io.*;
 import varun.backend.repository.OrderEntityRepository;
 import varun.backend.service.OrderService;
 
+import java.awt.print.Pageable;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -109,6 +112,25 @@ public class OrderServiceImpl implements OrderService {
         paymentDetails.setStaus(PaymentDetails.PaymentStatus.COMPLETED);
         existingOrder = orderEntityRepository.save(existingOrder);
         return convertToResponse(existingOrder);
+    }
+
+    @Override
+    public Double sumSalesByDate(LocalDate date) {
+        return orderEntityRepository.sumSalesByDate(date);
+    }
+
+    @Override
+    public Long countByOrderDate(LocalDate date) {
+        return orderEntityRepository.countByOrderDate(date);
+    }
+
+    @Override
+    public List<OrderResponse> findRecentOrders() {
+        return orderEntityRepository.findRecentOrders((Pageable) PageRequest.of(0,5))
+                .stream()
+                .map(orderEntity -> convertToResponse(orderEntity))
+                .collect(Collectors.toList());
+
     }
 
     private boolean verifyRazorpaySignatue(String razorpaySignature, String razorpayPaymentId, String razorpayOrderId) {
