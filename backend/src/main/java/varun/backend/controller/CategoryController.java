@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -27,13 +26,10 @@ public class CategoryController {
             @RequestPart("file") MultipartFile file) {
 
         ObjectMapper objectMapper = new ObjectMapper();
-
         try {
             CategoryRequest request =
                     objectMapper.readValue(categoryString, CategoryRequest.class);
-
             return categoryService.add(request, file);
-
         } catch (JsonProcessingException ex) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -42,7 +38,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/category")
     public List<CategoryResponse> fetchCategories() {
         return categoryService.read();
     }

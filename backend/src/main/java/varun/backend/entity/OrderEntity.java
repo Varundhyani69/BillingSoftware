@@ -23,14 +23,15 @@ public class OrderEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
      private Long id;
      private String orderId;
-     private String customerId;
+     private String customerName;
      private String phoneNumber;
      private Double subtotal;
      private Double tax;
-     private Double gradTotal;
+     private Double grandTotal;
      private LocalDateTime createdAt;
      @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
      @JoinColumn(name = "order_id")
+     @Builder.Default
      private List<OrderItemEntity> items = new ArrayList<>();
     @Embedded
      private PaymentDetails paymentDetails;

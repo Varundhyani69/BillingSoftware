@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +16,7 @@ public class OrderResponse {
     private String orderId;
     private String customerName;
     private String phoneNumber;
-    private List<OrderResponse.OrderItemResponse> items;
+    private List<OrderItemResponse> items;
     private Double subtotal;
     private Double tax;
     private Double grandTotal;
@@ -27,7 +28,7 @@ public class OrderResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    private static class OrderItemResponse{
+    public static class OrderItemResponse{
         private String itemId;
         private String name;
         private Double price;

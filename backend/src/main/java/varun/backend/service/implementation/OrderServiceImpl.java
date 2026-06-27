@@ -2,6 +2,7 @@ package varun.backend.service.implementation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import varun.backend.entity.OrderEntity;
 import varun.backend.entity.OrderItemEntity;
@@ -9,7 +10,6 @@ import varun.backend.io.*;
 import varun.backend.repository.OrderEntityRepository;
 import varun.backend.service.OrderService;
 
-import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,22 +18,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderEntityRepository orderEntityRepository;
+
     @Override
     public OrderResponse createOrder(OrderRequest request) {
         OrderEntity newOrder = convertToOrderEntity(request);
         PaymentDetails paymentDetails = new PaymentDetails();
-        paymentDetails.setStaus(newOrder.getPaymentMethod() == PaymentMethod.CASH?
+        paymentDetails.setStaus(newOrder.getPaymentMethod() == PaymentMethod.CASH ?
                 PaymentDetails.PaymentStatus.COMPLETED : PaymentDetails.PaymentStatus.PENDING);
         newOrder.setPaymentDetails(paymentDetails);
         List<OrderItemEntity> orderItems = request.getCartItems().stream()
-                .map(this::convertToOrderEntity)
+                .map(this::convertToOrderItemEntity)
                 .collect(Collectors.toList());
         newOrder.setItems(orderItems);
         newOrder = orderEntityRepository.save(newOrder);
         return convertToResponse(newOrder);
-
     }
-    private OrderItemEntity convertToOrderItemEntity(OrderRequest.OrderItemRequest orderItemRequest){
+
+    private OrderItemEntity convertToOrderItemEntity(OrderRequest.OrderItemRequest orderItemRequest) {
         return OrderItemEntity.builder()
                 .itemId(orderItemRequest.getItemId())
                 .name(orderItemRequest.getName())
@@ -41,26 +42,28 @@ public class OrderServiceImpl implements OrderService {
                 .quantity(orderItemRequest.getQuantity())
                 .build();
     }
+
     private OrderResponse convertToResponse(OrderEntity newOrder) {
-        OrderResponse.builder()
+        List<OrderResponse.OrderItemResponse> itemResponses = newOrder.getItems().stream()
+                .map(this::convertToItemResponse)
+                .collect(Collectors.toList());
+
+        return OrderResponse.builder()
                 .orderId(newOrder.getOrderId())
                 .customerName(newOrder.getCustomerName())
                 .phoneNumber(newOrder.getPhoneNumber())
                 .subtotal(newOrder.getSubtotal())
                 .tax(newOrder.getTax())
-                .grandTotal(newOrder.getGradTotal())
+                .grandTotal(newOrder.getGrandTotal())
                 .paymentMethod(newOrder.getPaymentMethod())
-                .items(newOrder.getItems().stream())
-                .map(this::convertToItemResponse)
-                .collect(Collectors.toList())
+                .items(itemResponses)
                 .paymentDetails(newOrder.getPaymentDetails())
                 .createdAt(newOrder.getCreatedAt())
                 .build();
-
     }
 
     private OrderEntity convertToOrderEntity(OrderRequest request) {
-        () -> OrderEntity.builder()
+        return OrderEntity.builder()
                 .customerName(request.getCustomerName())
                 .phoneNumber(request.getPhoneNumber())
                 .subtotal(request.getSubtotal())
@@ -70,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-    private OrderResponse.OrderItemResponse convertToItemResponse(OrderItemEntity orderItemEntity){
+    private OrderResponse.OrderItemResponse convertToItemResponse(OrderItemEntity orderItemEntity) {
         return OrderResponse.OrderItemResponse.builder()
                 .itemId(orderItemEntity.getItemId())
                 .name(orderItemEntity.getName())
@@ -79,11 +82,10 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-
     @Override
     public void deleteOrder(String orderId) {
-        OrderEntity existingOrder =  orderEntityRepository.findByOrderId(orderId)
-                .orElseThrow(()->new RuntimeException("Order not found"));
+        OrderEntity existingOrder = orderEntityRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
         orderEntityRepository.delete(existingOrder);
     }
 
@@ -97,13 +99,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderResponse verifyPayment(PaymentVerificationRequest request) {
-        OrderEntity existingOrder = orderEntityRepository.findByOrderId(request.getRazorpayOrderId())
-                .orElseThrow(()->new RuntimeException("Order not found"));
-        if(!verifyRazorpaySignatue(request.getRazorpaySignature(),
+        OrderEntity existingOrder = orderEntityRepository.findByOrderId(request.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        if (!verifyRazorpaySignature(request.getRazorpaySignature(),
                 request.getRazorpayPaymentId(),
-                request.getRazorpayOrderId())){
+                request.getRazorpayOrderId())) {
             throw new RuntimeException("Payment verification failed");
-
         }
         PaymentDetails paymentDetails = existingOrder.getPaymentDetails();
         paymentDetails.setRazorpayPaymentId(request.getRazorpayPaymentId());
@@ -126,14 +127,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderResponse> findRecentOrders() {
-        return orderEntityRepository.findRecentOrders((Pageable) PageRequest.of(0,5))
+        Pageable pageable = PageRequest.of(0, 5);
+        return orderEntityRepository.findRecentOrders(pageable)
                 .stream()
-                .map(orderEntity -> convertToResponse(orderEntity))
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
-
     }
 
-    private boolean verifyRazorpaySignatue(String razorpaySignature, String razorpayPaymentId, String razorpayOrderId) {
+    private boolean verifyRazorpaySignature(String razorpaySignature, String razorpayPaymentId, String razorpayOrderId) {
         return true;
     }
 }

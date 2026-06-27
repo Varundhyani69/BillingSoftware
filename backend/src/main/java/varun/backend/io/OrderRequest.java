@@ -24,7 +24,7 @@ public class OrderRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    private static class OrderItemRequest{
+    public static class OrderItemRequest{
         private String itemId;
         private String name;
         private Double price;

@@ -1,7 +1,6 @@
 package varun.backend.service.implementation;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,13 +12,11 @@ import varun.backend.service.UserService;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
@@ -45,7 +42,7 @@ public class UserServiceImpl implements UserService {
         return UserEntity.builder()
                 .userId(UUID.randomUUID().toString())
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .name(request.getName())
                 .build();
@@ -54,7 +51,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getUserRole(String email) {
         UserEntity existingUser = userRepository.findByEmail(email)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return existingUser.getRole();
     }
 
@@ -62,14 +59,14 @@ public class UserServiceImpl implements UserService {
     public List<UserResponse> readUsers() {
         return userRepository.findAll()
                 .stream()
-                .map(user -> convertToResponse(user))
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUser(String id) {
         UserEntity existingUser = userRepository.findByUserId(id)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         userRepository.delete(existingUser);
     }
 }

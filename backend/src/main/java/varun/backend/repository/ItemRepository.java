@@ -4,7 +4,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import varun.backend.entity.ItemEntity;
 
-public interface ItemRepository extends JpaRepository<ItemEntity,Long> {
+public interface ItemRepository extends JpaRepository<ItemEntity, Long> {
     Optional<ItemEntity> findByItemId(String id);
-    Integer countByCategoryId(String id);
+    Integer countByCategory_CategoryId(String categoryId);
 }
