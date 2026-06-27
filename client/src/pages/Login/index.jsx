@@ -62,6 +62,28 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-xs font-medium text-gray-500 mb-2">Test Credentials</p>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-gray-600 font-medium">Admin (Owner):</span>
+                <span className="text-gray-500 ml-1">admin@retail.com / admin123</span>
+              </div>
+              <button type="button" onClick={() => { setEmail('admin@retail.com'); setPassword('admin123'); }}
+                className="text-blue-600 hover:text-blue-700 font-medium">Use</button>
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-gray-600 font-medium">Cashier:</span>
+                <span className="text-gray-500 ml-1">varun@cashier.com / cashier</span>
+              </div>
+              <button type="button" onClick={() => { setEmail('varun@cashier.com'); setPassword('cashier'); }}
+                className="text-blue-600 hover:text-blue-700 font-medium">Use</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
